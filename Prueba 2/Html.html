@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plancarte Space Experience — Agencia de viajes interplanetaria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- Librería para vistas 360° -->
+<script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+<style>
+/* ===========================================================
+   Plancarte Space Experience — hoja de estilos
+   Paleta: vacío #060714 · panel #10143093 · dorado #E7A94C
+           coral #E1573B · cian #6FD6C6 · papel #F4EFE3
+   =========================================================== */
+
+:root{
+  --void: #060714;
+  --void-soft: #0B0E23;
+  --panel: #10132c;
+  --panel-edge: #1c2050;
+  --gold: #E7A94C;
+  --coral: #E1573B;
+  --cyan: #6FD6C6;
+  --paper: #F4EFE3;
+  --muted: #9CA1C4;
+
+  --display: 'Fraunces', serif;
+  --body: 'Space Grotesk', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+*{ box-sizing: border-box; }
+
+html{ scroll-behavior: smooth; }
+
+body{
+  margin:0;
+  background: var(--void);
+  color: var(--paper);
+  font-family: var(--body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior: auto; }
+  *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+a{ color: inherit; }
+
+:focus-visible{
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.eyebrow{
+  display:block;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.9rem;
+}
+
+h1,h2,h3{
+  font-family: var(--display);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ---------- starfield ---------- */
+.stars{
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 30%, rgba(244,239,227,0.9), transparent),
+    radial-gradient(1.5px 1.5px at 65% 15%, rgba(244,239,227,0.7), transparent),
+    radial-gradient(1px 1px at 80% 60%, rgba(244,239,227,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 40% 80%, rgba(244,239,227,0.8), transparent),
+    radial-gradient(1px 1px at 90% 85%, rgba(244,239,227,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 10% 65%, rgba(244,239,227,0.6), transparent),
+    radial-gradient(1px 1px at 55% 45%, rgba(244,239,227,0.5), transparent);
+  background-repeat: repeat;
+  background-size: 600px 600px;
+}
+
+/* ---------- hero / nav ---------- */
+.hero{
+  min-height: 100vh;
+  display:flex;
+  flex-direction: column;
+  padding: 1.6rem clamp(1.2rem, 5vw, 4rem);
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, rgba(231,169,76,0.10), transparent 60%),
+    linear-gradient(180deg, var(--void-soft), var(--void) 70%);
+}
+
+.topnav{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.brand{
+  font-family: var(--display);
+  font-size: 1.15rem;
+  letter-spacing: 0.01em;
+}
+.brand em{ font-style: italic; color: var(--gold); }
+
+.topnav ul{
+  list-style:none;
+  display:flex;
+  gap: 1.8rem;
+  margin:0; padding:0;
+  font-size: 0.9rem;
+}
+.topnav a{ text-decoration:none; color: var(--muted); transition: color .2s; }
+.topnav a:hover{ color: var(--paper); }
+.nav-cta{
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 0.4rem 0.95rem;
+  color: var(--gold) !important;
+}
+.nav-cta:hover{ background: var(--gold); color: var(--void) !important; }
+
+.hero-content{
+  flex: 1;
+  display:flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 780px;
+  margin: 0 auto;
+  text-align:center;
+  padding: 3rem 0;
+}
+
+.hero-content h1{
+  font-size: clamp(2.4rem, 7vw, 4.6rem);
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+}
+
+.hero-sub{
+  color: var(--muted);
+  font-size: 1.05rem;
+  max-width: 46ch;
+  margin: 1.4rem auto 2.2rem;
+}
+
+.cta{
+  display:inline-block;
+  align-self:center;
+  text-decoration:none;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--void);
+  background: var(--gold);
+  padding: 0.85rem 1.6rem;
+  border-radius: 999px;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.cta:hover{ transform: translateY(-2px); box-shadow: 0 10px 24px rgba(231,169,76,0.25); }
+
+/* ---------- section head ---------- */
+.section-head{
+  max-width: 640px;
+  margin: 0 auto 2.5rem;
+  text-align:center;
+}
+.section-head h2{
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  margin-bottom: 0.7rem;
+}
+.section-head p{ color: var(--muted); }
+
+main{ position: relative; z-index: 1; }
+
+section{ padding: 5.5rem clamp(1.2rem, 5vw, 4rem); }
+
+/* ---------- orbit map ---------- */
+.orbit-section{ text-align:center; }
+
+.orbit-wrap{ max-width: 760px; margin: 0 auto; }
+
+.orbit-map{ width: 100%; height:auto; overflow: visible; }
+
+.sun{
+  fill: var(--gold);
+  filter: drop-shadow(0 0 24px rgba(231,169,76,0.75));
+}
+
+.orbit-ring{
+  fill:none;
+  stroke: var(--panel-edge);
+  stroke-width: 1;
+  stroke-dasharray: 3 6;
+}
+
+.planet-orbit-group{ transform-origin: 400px 400px; animation: spin linear infinite; }
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+.planet{
+  cursor: pointer;
+  stroke: rgba(6,7,20,0.5);
+  stroke-width: 2;
+  transition: r 0.15s ease, filter .2s ease;
+}
+.planet:hover, .planet:focus-visible{
+  filter: drop-shadow(0 0 10px currentColor);
+}
+.planet.is-active{
+  stroke: var(--paper);
+  stroke-width: 3;
+}
+
+.orbit-hint{
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 1.2rem;
+}
+
+/* ---------- boarding pass ---------- */
+.boarding-section{ padding-top: 1rem; }
+
+.boarding-pass{
+  max-width: 880px;
+  margin: 0 auto;
+  display:grid;
+  grid-template-columns: 120px 1fr;
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.35);
+}
+
+.pass-stub{
+  position: relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: var(--planet-color, var(--gold));
+  color: var(--void);
+}
+.pass-stub span{
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--mono);
+  letter-spacing: 0.18em;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.pass-perforation{
+  position:absolute;
+  right: -12px;
+  top:0; bottom:0;
+  width: 24px;
+  background-image: radial-gradient(circle, var(--void) 6px, transparent 7px);
+  background-size: 24px 24px;
+  background-position: center;
+}
+.pass-perforation::before,
+.pass-perforation::after{
+  content:"";
+  position:absolute;
+  left: 6px;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--void);
+}
+.pass-perforation::before{ top: -12px; }
+.pass-perforation::after{ bottom: -12px; }
+
+.pass-main{ padding: 2.4rem clamp(1.4rem, 4vw, 2.8rem); }
+
+.pass-top{
+  display:flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  border-bottom: 1px dashed var(--panel-edge);
+  padding-bottom: 1.2rem;
+  margin-bottom: 1.6rem;
+}
+.pass-top h3{
+  font-size: 1.9rem;
+  color: var(--planet-color, var(--gold));
+}
+.pass-tagline{ color: var(--muted); font-size: 0.95rem; max-width: 34ch; }
+.pass-ref{
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align:right;
+}
+
+.pass-stats{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.stat{
+  background: var(--void-soft);
+  border: 1px solid var(--panel-edge);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+.stat-label{
+  display:block;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+.stat-value{
+  font-family: var(--mono);
+  font-size: 1.02rem;
+  color: var(--paper);
+}
+
+.pass-lists{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.6rem;
+  margin-bottom: 2rem; /* Espacio para el botón 360 */
+}
+.pass-lists h4{
+  font-family: var(--body);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin: 0 0 0.5rem;
+}
+.pass-lists p{
+  margin:0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.pass-lists .alert p{ color: var(--coral); }
+
+/* ---------- Botón 360 ---------- */
+.btn-360{
+  width: 100%;
+  background: transparent;
+  color: var(--cyan);
+  border: 1px solid var(--cyan);
+  padding: 1rem;
+  border-radius: 12px;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-360:hover{
+  background: var(--cyan);
+  color: var(--void);
+  box-shadow: 0 0 20px rgba(111, 214, 198, 0.4);
+}
+
+/* ---------- Modal 360 ---------- */
+.modal-360 {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: none; /* Oculto por defecto */
+}
+.modal-360.is-open {
+  display: block;
+}
+.close-360 {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  z-index: 10000;
+  background: var(--coral);
+  color: var(--void);
+  border: none;
+  padding: 0.8rem 1.5rem;
+  font-family: var(--mono);
+  font-weight: bold;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(225, 87, 59, 0.4);
+  transition: transform 0.2s;
+}
+.close-360:hover {
+  transform: scale(1.05);
+}
+
+@media (max-width: 640px){
+  .boarding-pass{ grid-template-columns: 1fr; }
+  .pass-stub{ padding: 0.6rem 0; }
+  .pass-stub span{ writing-mode: horizontal-tb; transform:none; }
+  .pass-perforation{ display:none; }
+  .pass-stats, .pass-lists{ grid-template-columns: 1fr; }
+}
+
+/* ---------- catalog / postcards ---------- */
+.catalog{ background: linear-gradient(180deg, transparent, rgba(16,19,44,0.5) 20%, rgba(16,19,44,0.5) 80%, transparent); }
+
+.postcards{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1.1rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.postcard{
+  text-align:left;
+  cursor:pointer;
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 16px;
+  padding: 1.2rem 1.2rem 1.4rem;
+  color: inherit;
+  font-family: inherit;
+  transition: transform .2s ease, border-color .2s ease;
+}
+.postcard:hover{ transform: translateY(-4px); border-color: var(--planet-color); }
+
+.postcard-dot{
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--planet-color);
+  margin-bottom: 1rem;
+}
+.postcard h3{
+  font-size: 1.1rem;
+  margin-bottom: 0.3rem;
+  color: var(--paper);
+}
+.postcard p{
+  margin:0;
+  font-size: 0.83rem;
+  color: var(--muted);
+}
+
+/* ---------- closing ---------- */
+.closing{
+  text-align:center;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.closing h2{ font-size: clamp(1.6rem, 4vw, 2.2rem); margin-bottom: 1rem; }
+.closing p{ color: var(--muted); }
+
+/* ---------- footer ---------- */
+.site-footer{
+  padding: 2.4rem clamp(1.2rem, 5vw, 4rem) 3rem;
+  border-top: 1px solid var(--panel-edge);
+  text-align:center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.fine-print{ font-size: 0.75rem; opacity: 0.7; margin-top: 0.4rem; }
+
+</style>
+</head>
+<body>
+
+<!-- Visor 360 Oculto -->
+<div id="modal360" class="modal-360">
+  <button class="close-360" onclick="cerrar360()">Volver al mapa orbital ✖</button>
+  <!-- Escena A-Frame -->
+  <a-scene embedded style="height: 100vh; width: 100vw;" vr-mode-ui="enabled: false">
+    <a-sky id="sky360" src="" rotation="0 -130 0"></a-sky>
+    <!-- Controles para arrastrar con el mouse en PC o mover celular -->
+    <a-camera position="0 0 0" look-controls="reverseMouseDrag: true"></a-camera>
+  </a-scene>
+</div>
+
+<div class="stars" aria-hidden="true"></div>
+
+<header class="hero">
+  <nav class="topnav">
+    <span class="brand">Plancarte <em>Space Experience</em></span>
+    <ul>
+      <li><a href="#mapa">Mapa de rutas</a></li>
+      <li><a href="#catalogo">Catálogo</a></li>
+      <li><a href="#reservar" class="nav-cta">Reservar boleto</a></li>
+    </ul>
+  </nav>
+
+  <div class="hero-content">
+    <span class="eyebrow">Agencia de viajes · Vuelos interplanetarios desde 1 UA</span>
+    <h1>Guía turística del<br>sistema solar</h1>
+    <p class="hero-sub">Recorre el sistema solar como si fuera tu próximo itinerario: gravedad, clima, duración del día y todo lo que necesitas empacar antes de subir a bordo.</p>
+    <a href="#mapa" class="cta">Explorar el mapa de rutas ↓</a>
+  </div>
+</header>
+
+<main>
+  <section id="mapa" class="orbit-section">
+    <div class="section-head">
+      <span class="eyebrow">Sala de embarque</span>
+      <h2>Mapa de rutas del sistema solar</h2>
+      <p>Toca cualquier planeta en órbita para abrir su ficha de viaje.</p>
+    </div>
+
+    <div class="orbit-wrap">
+      <svg class="orbit-map" viewBox="0 0 800 800" role="group" aria-label="Mapa orbital interactivo de los planetas">
+        <circle class="sun" cx="400" cy="400" r="30"></circle>
+        <!-- los anillos y planetas se generan en script.js -->
+        <g id="orbits"></g>
+      </svg>
+      <p class="orbit-hint">Cada anillo gira a su propia velocidad, como en la realidad — sólo que aquí puedes detener el vuelo cuando quieras.</p>
+    </div>
+  </section>
+
+  <section id="ficha" class="boarding-section" hidden>
+    <div class="boarding-pass" id="boardingPass">
+      <!-- contenido generado por script.js -->
+    </div>
+  </section>
+
+  <section id="catalogo" class="catalog">
+    <div class="section-head">
+      <span class="eyebrow">Catálogo completo</span>
+      <h2>Todos los destinos</h2>
+      <p>¿Prefieres elegir por nombre en vez de por órbita? Aquí está el itinerario completo.</p>
+    </div>
+    <div class="postcards" id="postcards">
+      <!-- tarjetas generadas por script.js -->
+    </div>
+  </section>
+
+  <section id="reservar" class="closing">
+    <span class="eyebrow">Antes de despegar</span>
+    <h2>No existen vuelos directos. Sólo trayectorias.</h2>
+    <p>Cada boleto de Plancarte Space Experience es también una lección de física orbital: no vas en línea recta a ningún lado, vas cayendo alrededor del Sol de forma muy elegante.</p>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>Plancarte Space Experience — proyecto educativo interactivo sobre el sistema solar.</p>
+  <p class="fine-print">Los datos de gravedad, temperatura y duración del día son valores promedio reales de cada planeta. Las recomendaciones de equipaje son, evidentemente, imaginarias.</p>
+</footer>
+
+<script>
+// ===========================================================
+// Plancarte Space Experience
+// Agregado parámetro 'img360' con URLs de texturas de ejemplo
+// ===========================================================
+
+const PLANETS = [
+  {
+    id: "mercurio",
+    nombre: "Mercurio",
+    tagline: "El destino extremo, para viajeros de alto riesgo.",
+    color: "#B5B0A6",
+    orbitRadius: 60,
+    orbitSeconds: 8,
+    planetRadius: 6,
+    gravedad: "3.7 m/s² (38% de la Tierra)",
+    temperatura: "-180°C de noche · 430°C de día",
+    diaSolar: "176 días terrestres",
+    llevar: "Traje térmico reversible, protector solar industrial y un reloj muy paciente: el día dura casi dos años terrestres.",
+    ver: "La Cuenca Caloris, uno de los cráteres de impacto más grandes del sistema solar, y los llamados 'puntos calientes' donde el Sol parece detenerse en el cielo.",
+    clima: "Sin atmósfera que amortigüe el viento solar. Evita el lado diurno del planeta en todo momento.",
+    img360: "img/Mercurio.jpg" // Cambiar por textura local
+  },
+  {
+    id: "venus",
+    nombre: "Venus",
+    tagline: "El planeta que se ve hermoso sólo desde lejos.",
+    color: "#E8C170",
+    orbitRadius: 92,
+    orbitSeconds: 12,
+    planetRadius: 9,
+    gravedad: "8.87 m/s² (90% de la Tierra)",
+    temperatura: "464°C constantes, día y noche",
+    diaSolar: "243 días terrestres (rotación retrógrada)",
+    llevar: "Traje presurizado anticorrosivo — la atmósfera es en gran parte ácido sulfúrico — y nada inflamable.",
+    ver: "Los volcanes de Maat Mons y el mar de nubes doradas, mejor apreciado en órbita que a pie de superficie.",
+    clima: "Presión atmosférica 90 veces la terrestre. Destino recomendado sólo para sondas y visitantes muy bien blindados.",
+    img360: "img/Venus.jpg" // Cambiar por textura local
+  },
+  {
+    id: "tierra",
+    nombre: "Tierra",
+    tagline: "El hogar, para quienes viajan por nostalgia.",
+    color: "#3FA9C4",
+    orbitRadius: 124,
+    orbitSeconds: 16,
+    planetRadius: 9,
+    gravedad: "9.8 m/s² (referencia del catálogo)",
+    temperatura: "15°C de promedio, clima muy variado",
+    diaSolar: "24 horas",
+    llevar: "Lo de siempre. Aprovecha la escala para dejar cargado el equipaje que no necesitarás en el resto del viaje.",
+    ver: "El único destino del catálogo con océanos líquidos confirmados y una atmósfera respirable sin traje.",
+    clima: "Protegido por una magnetosfera activa. El destino más seguro del itinerario.",
+    img360: "img/Tierra.jpg" // Cambiar por textura local
+  },
+  {
+    id: "marte",
+    nombre: "Marte",
+    tagline: "El favorito de los colonos.",
+    color: "#C1440E",
+    orbitRadius: 156,
+    orbitSeconds: 20,
+    planetRadius: 7,
+    gravedad: "3.71 m/s² (38% de la Tierra)",
+    temperatura: "-63°C de promedio (de -140°C a 20°C)",
+    diaSolar: "24 h 37 min",
+    llevar: "Traje presurizado, filtro para tormentas de polvo y humectante — el aire es prácticamente 100% seco.",
+    ver: "Valles Marineris, un cañón cuatro veces más grande que el Gran Cañón, y el Olympus Mons, la montaña más alta del sistema solar.",
+    clima: "Tormentas de polvo globales ocasionales. Consulta el pronóstico antes de salir de la cúpula habitacional.",
+    img360: "img/Marte.jpg" // Cambiar por textura local
+  },
+  {
+    id: "jupiter",
+    nombre: "Júpiter",
+    tagline: "Sólo para admirar desde la ventana del crucero.",
+    color: "#D9A066",
+    orbitRadius: 194,
+    orbitSeconds: 26,
+    planetRadius: 18,
+    gravedad: "24.79 m/s² (2.5 veces la Tierra)",
+    temperatura: "-110°C en las nubes superiores",
+    diaSolar: "9 h 56 min — el más corto del sistema",
+    llevar: "Nada: no hay superficie donde aterrizar. Reserva un camarote en el crucero orbital.",
+    ver: "La Gran Mancha Roja, una tormenta más grande que la Tierra y activa desde hace siglos.",
+    clima: "Cinturones de radiación intensísimos. Los cruceros deben mantener distancia de seguridad constante.",
+    img360: "img/Jupiter.jpg" // Cambiar por textura local
+  },
+  {
+    id: "saturno",
+    nombre: "Saturno",
+    tagline: "El destino más fotografiado del catálogo.",
+    color: "#E4C590",
+    orbitRadius: 232,
+    orbitSeconds: 32,
+    planetRadius: 16,
+    gravedad: "10.44 m/s² (1.07 veces la Tierra)",
+    temperatura: "-140°C",
+    diaSolar: "10 h 33 min",
+    llevar: "Una cámara con buen zoom: los anillos se aprecian mejor desde alguna de sus lunas.",
+    ver: "Sus siete anillos principales de hielo y roca, y Titán, la única luna del sistema con lagos líquidos en su superficie.",
+    clima: "Vientos de hasta 1,800 km/h en la atmósfera superior. Mantén el crucero bien anclado.",
+    img360: "img/Saturno.jpg" // Cambiar por textura local
+  },
+  {
+    id: "urano",
+    nombre: "Urano",
+    tagline: "El planeta que viaja de lado.",
+    color: "#7FD8D0",
+    orbitRadius: 268,
+    orbitSeconds: 38,
+    planetRadius: 12,
+    gravedad: "8.69 m/s² (0.89 veces la Tierra)",
+    temperatura: "-195°C, el más frío del sistema",
+    diaSolar: "17 h 14 min, con estaciones de 21 años cada una",
+    llevar: "Abrigo criogénico y mucha paciencia: cada estación del año dura dos décadas.",
+    ver: "Sus tenues anillos verticales y auroras que no coinciden con sus polos, por la inclinación de 98° del planeta.",
+    clima: "Campo magnético inclinado 59° respecto al eje de rotación. La brújula, aquí, no sirve de nada.",
+    img360: "img/Urano.jpg" // Cambiar por textura local
+  },
+  {
+    id: "neptuno",
+    nombre: "Neptuno",
+    tagline: "El límite del recorrido clásico.",
+    color: "#4062BB",
+    orbitRadius: 304,
+    orbitSeconds: 44,
+    planetRadius: 12,
+    gravedad: "11.15 m/s² (1.14 veces la Tierra)",
+    temperatura: "-200°C",
+    diaSolar: "16 h 6 min",
+    llevar: "Anclaje reforzado: aquí soplan los vientos más rápidos del sistema, hasta 2,100 km/h.",
+    ver: "La Gran Mancha Oscura, una tormenta gigante que aparece y desaparece con el paso de los años.",
+    clima: "Vientos extremos constantes. Vuelo turístico únicamente — sin descensos programados.",
+    img360: "img/Neptuno.jpg" // Cambiar por textura local
+  }
+];
+
+const orbitsGroup = document.getElementById("orbits");
+const postcardsWrap = document.getElementById("postcards");
+const boardingSection = document.getElementById("ficha");
+const boardingPass = document.getElementById("boardingPass");
+
+// --- Funciones para abrir y cerrar la vista 360 ---
+function abrir360(url) {
+  const modal = document.getElementById("modal360");
+  const sky = document.getElementById("sky360");
+  
+  // Asignamos la imagen correspondiente al destino
+  sky.setAttribute("src", url);
+  
+  // Mostramos el modal y bloqueamos el scroll del fondo
+  modal.classList.add("is-open");
+  document.body.style.overflow = "hidden"; 
+}
+
+function cerrar360() {
+  const modal = document.getElementById("modal360");
+  
+  // Ocultamos el modal y reactivamos el scroll
+  modal.classList.remove("is-open");
+  document.body.style.overflow = ""; 
+}
+
+// --- construir el mapa orbital (SVG) ---
+PLANETS.forEach(p => {
+  const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  ring.setAttribute("class", "orbit-ring");
+  ring.setAttribute("cx", 400);
+  ring.setAttribute("cy", 400);
+  ring.setAttribute("r", p.orbitRadius);
+  orbitsGroup.appendChild(ring);
+
+  const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  group.setAttribute("class", "planet-orbit-group");
+  group.style.animationDuration = p.orbitSeconds + "s";
+  // cada planeta arranca en un ángulo distinto para que no salgan alineados
+  group.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+  const planet = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  planet.setAttribute("class", "planet");
+  planet.setAttribute("cx", 400);
+  planet.setAttribute("cy", 400 - p.orbitRadius);
+  planet.setAttribute("r", p.planetRadius);
+  planet.setAttribute("fill", p.color);
+  planet.style.color = p.color;
+  planet.setAttribute("tabindex", "0");
+  planet.setAttribute("role", "button");
+  planet.setAttribute("aria-label", "Ver ficha de viaje: " + p.nombre);
+  planet.dataset.id = p.id;
+
+  planet.addEventListener("click", () => selectPlanet(p.id));
+  planet.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectPlanet(p.id); }
+  });
+
+  group.appendChild(planet);
+  orbitsGroup.appendChild(group);
+});
+
+// --- construir el catálogo de postales ---
+PLANETS.forEach(p => {
+  const card = document.createElement("button");
+  card.className = "postcard";
+  card.style.setProperty("--planet-color", p.color);
+  card.innerHTML = `
+    <span class="postcard-dot"></span>
+    <h3>${p.nombre}</h3>
+    <p>${p.tagline}</p>
+  `;
+  card.addEventListener("click", () => selectPlanet(p.id));
+  postcardsWrap.appendChild(card);
+});
+
+// --- seleccionar un planeta: pintar la tarjeta de embarque ---
+function selectPlanet(id) {
+  const p = PLANETS.find(pl => pl.id === id);
+  if (!p) return;
+
+  document.querySelectorAll(".planet").forEach(el => {
+    el.classList.toggle("is-active", el.dataset.id === id);
+  });
+
+  boardingPass.style.setProperty("--planet-color", p.color);
+  boardingPass.innerHTML = `
+    <div class="pass-stub" style="--planet-color:${p.color}">
+      <span>Boleto · ${p.nombre}</span>
+      <div class="pass-perforation"></div>
+    </div>
+    <div class="pass-main">
+      <div class="pass-top">
+        <div>
+          <h3>${p.nombre}</h3>
+          <p class="pass-tagline">${p.tagline}</p>
+        </div>
+        <div class="pass-ref">
+          PLANCARTE·SPACE<br>
+          RUTA-${p.id.toUpperCase()}
+        </div>
+      </div>
+
+      <div class="pass-stats">
+        <div class="stat">
+          <span class="stat-label">Gravedad</span>
+          <span class="stat-value">${p.gravedad}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Temperatura</span>
+          <span class="stat-value">${p.temperatura}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Duración del día</span>
+          <span class="stat-value">${p.diaSolar}</span>
+        </div>
+      </div>
+
+      <div class="pass-lists">
+        <div>
+          <h4>Qué llevar</h4>
+          <p>${p.llevar}</p>
+        </div>
+        <div>
+          <h4>Qué ver</h4>
+          <p>${p.ver}</p>
+        </div>
+        <div class="alert">
+          <h4>Clima espacial</h4>
+          <p>${p.clima}</p>
+        </div>
+      </div>
+      
+      <!-- Botón para lanzar la vista 360 -->
+      <button class="btn-360" onclick="abrir360('${p.img360}')">
+        Descubrir ${p.nombre} en 360° 🔭
+      </button>
+
+    </div>
+  `;
+
+  boardingSection.hidden = false;
+  boardingSection.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+// destino de bienvenida: la Tierra, para orientar al viajero
+selectPlanet("tierra");
+boardingSection.hidden = true; // pero no se muestra hasta que el usuario elija algo
+
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+/* Estilos básicos para la guía turística espacial */
+body {
+    background-color: #050b14;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+header {
+    padding: 2rem;
+    background: linear-gradient(to bottom, #1a2a6c, #050b14);
+}
+
+h1 {
+    color: #4cc9f0;
+}
+
+.contenedor-planetas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 2rem;
+}
+
+.planeta {
+    width: 100px;
+    height: 100px;
+    background-color: #4cc9f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.3s, background-color 0.3s;
+    font-weight: bold;
+    color: #050b14;
+}
+
+.planeta:hover {
+    transform: scale(1.1);
+    background-color: #ffffff;
+}
+
+.oculto {
+    display: none;
+}
+
+#detalle-planeta {
+    padding: 2rem;
+    background-color: #101d30;
+    border: 1px solid #4cc9f0;
+    border-radius: 10px;
+    margin: 20px auto;
+    max-width: 600px;
+}
+.mapa-sistema-solar {
+    
+}
