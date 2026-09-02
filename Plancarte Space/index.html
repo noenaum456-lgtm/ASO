@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- La etiqueta meta charset define la codificación de caracteres a UTF-8 para soportar tildes y caracteres especiales del español -->
+<meta charset="UTF-8">
+<!-- La etiqueta meta viewport es fundamental para el diseño responsivo; asegura que la página se escale correctamente en dispositivos móviles -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- El título es lo que aparece en la pestaña del navegador y es importante para el SEO y la accesibilidad -->
+<title>Plancarte Space Experience — Agencia de viajes interplanetaria</title>
+<!-- Preconectamos con Google Fonts para acelerar la carga y aplicamos fuentes seleccionadas para mejorar la legibilidad y la estética editorial -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Importamos A-Frame para poder renderizar gráficos 3D (el sistema solar y el visor 360) directamente en el navegador de forma sencilla -->
+<script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+<style>
+/* Se utiliza el selector :root para definir variables CSS (Custom Properties). 
+   Esto permite centralizar la paleta de colores y las tipografías, facilitando cambios globales sin tener que buscar y reemplazar valores uno por uno. */
+:root{
+  --void: #020617;      
+  --void-soft: #0f172a; 
+  --panel: #1e293b;     
+  --panel-edge: #334155;
+  --gold: #E7A94C;      
+  --coral: #E1573B;     
+  --cyan: #38bdf8;      
+  --paper: #f8fafc;     
+  --muted: #94a3b8;     
+
+  --display: 'Lora', serif;
+  --body: 'Poppins', sans-serif;
+  --mono: 'Poppins', sans-serif;
+}
+
+/* El selector universal (*) aplica box-sizing: border-box a todos los elementos. 
+   Esto asegura que el padding y los bordes se incluyan en el ancho y alto total del elemento, evitando desbordamientos. */
+*{ box-sizing: border-box; }
+
+/* scroll-behavior: smooth permite un desplazamiento suave al hacer clic en enlaces internos. 
+   overflow-x: hidden previene el scroll horizontal no deseado. */
+html{ scroll-behavior: smooth; overflow-x: hidden; }
+
+/* Se establecen los estilos base del documento: fondo oscuro, texto claro y tipografía principal.
+   -webkit-font-smoothing mejora la legibilidad en pantallas de Apple. */
+body{
+  margin:0;
+  background: var(--void);
+  color: var(--paper);
+  font-family: var(--body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Heredamos el color de los enlaces para que no aparezcan con el azul por defecto del navegador */
+a{ color: inherit; }
+
+/* Estilo para la navegación por teclado, mejorando la accesibilidad visualizando claramente qué elemento está enfocado */
+:focus-visible{ outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+/* Clases de utilidad tipográfica para pequeños títulos o etiquetas supra-titulares */
+.eyebrow{
+  display:block;
+  font-family: var(--body);
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 0.9rem;
+  font-weight: 600;
+}
+
+/* Reiniciamos el margen de los encabezados para tener un control más preciso del espaciado mediante CSS */
+h1,h2,h3{ font-family: var(--display); font-weight: 600; margin: 0; }
+
+/* Capa de fondo fijo que genera un patrón de puntos simulando estrellas usando múltiples radial-gradients.
+   z-index negativo asegura que se quede detrás de todo el contenido. */
+.stars {
+  position: fixed; inset: 0; z-index: -2;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 30%, rgba(255,255,255,0.9), transparent),
+    radial-gradient(1.5px 1.5px at 65% 15%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 40% 80%, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 90% 85%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 10% 65%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 55% 45%, rgba(255,255,255,0.5), transparent);
+  background-repeat: repeat;
+  background-size: 600px 600px;
+  animation: twinkle 5s infinite alternate ease-in-out;
+}
+
+/* Animación de opacidad para que las estrellas parezcan parpadear lentamente */
+@keyframes twinkle { 0% { opacity: 0.6; } 100% { opacity: 1; } }
+
+/* Elementos visuales que simulan estrellas fugaces, posicionados absolutamente y animados linealmente */
+.shooting-star {
+  position: fixed; width: 120px; height: 2px;
+  background: linear-gradient(90deg, rgba(255,255,255,1), transparent);
+  border-radius: 50%; z-index: -1; opacity: 0;
+  animation: shooting 6s infinite linear;
+}
+
+/* Retardos individuales para que las estrellas fugaces no aparezcan al mismo tiempo */
+.ss1 { top: 10%; left: 80%; animation-delay: 0s; }
+.ss2 { top: 30%; left: 95%; animation-delay: 3s; }
+.ss3 { top: -10%; left: 50%; animation-delay: 7s; }
+
+/* Animación clave que mueve la estrella fugaz en diagonal y la desvanece simultáneamente */
+@keyframes shooting {
+  0% { transform: translateX(0) translateY(0) rotate(-45deg); opacity: 1; }
+  15% { transform: translateX(-30vw) translateY(30vw) rotate(-45deg); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* El contenedor hero ocupa al menos toda la altura de la pantalla (100vh) y usa Flexbox
+   para organizar la navegación superior y el contenido centrado. */
+.hero{
+  min-height: 100vh; display:flex; flex-direction: column;
+  padding: 1.6rem clamp(1.2rem, 5vw, 4rem);
+  background: radial-gradient(ellipse 90% 60% at 50% 0%, rgba(56, 189, 248, 0.15), transparent 60%), linear-gradient(180deg, transparent, var(--void) 90%);
+  position: relative;
+}
+
+/* Flexbox para alinear el logo a la izquierda y el menú a la derecha de forma fluida */
+.topnav{ display:flex; align-items:center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.brand{ font-family: var(--display); font-size: 1.4rem; letter-spacing: 0.02em; color: var(--paper); text-align: center; }
+.brand em{ font-style: italic; color: var(--cyan); }
+
+/* Se quita el estilo de lista (viñetas) para crear un menú de navegación horizontal */
+.topnav ul{ list-style:none; display:flex; gap: 1.8rem; margin:0; padding:0; font-size: 0.95rem; font-weight: 500; align-items: center; }
+.topnav a{ text-decoration:none; color: var(--muted); transition: color .2s; }
+.topnav a:hover{ color: var(--cyan); }
+
+/* Estilo destacado para el botón principal de la navegación usando bordes redondeados */
+.nav-cta{
+  border: 1px solid var(--cyan); border-radius: 999px; padding: 0.5rem 1.2rem;
+  color: var(--cyan) !important; transition: all 0.2s ease;
+}
+.nav-cta:hover{ background: var(--cyan); color: var(--void) !important; font-weight: 600;}
+
+/* Media query para adaptar la barra de navegación en pantallas más pequeñas (tabletas y móviles), apilando los elementos */
+@media (max-width: 800px) {
+  .topnav { flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; }
+  .topnav ul { flex-wrap: wrap; justify-content: center; gap: 1rem; }
+}
+
+/* Contenido central del hero. flex: 1 permite que ocupe el espacio sobrante empujando otros elementos si es necesario */
+.hero-content{ flex: 1; display:flex; flex-direction: column; justify-content: center; max-width: 850px; margin: 0 auto; text-align:center; padding: 3rem 0; }
+.hero-content h1{ font-size: clamp(2.8rem, 8vw, 4.5rem); line-height: 1.1; letter-spacing: -0.02em; text-shadow: 0 0 20px rgba(56, 189, 248, 0.3); }
+.hero-sub{ color: var(--muted); font-size: 1.15rem; max-width: 55ch; margin: 1.6rem auto 2.5rem; font-weight: 300; }
+
+/* Estilo del botón principal de llamada a la acción (Call to Action), con efecto de elevación al hacer hover */
+.cta{
+  display:inline-block; align-self:center; text-decoration:none; font-family: var(--body); font-size: 1rem;
+  letter-spacing: 0.05em; color: var(--void); background: var(--paper); padding: 1rem 2rem;
+  border-radius: 999px; font-weight: 600; transition: all .3s ease;
+}
+.cta:hover{ transform: translateY(-3px); box-shadow: 0 10px 25px rgba(248, 250, 252, 0.3); background: var(--cyan); }
+
+/* Indicador visual para que el usuario entienda que hay más contenido abajo, animado de forma cíclica */
+.scroll-indicator {
+  position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); text-align: center; color: var(--muted);
+  font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; animation: bounce 2s infinite;
+}
+.scroll-indicator .arrow { font-size: 1.5rem; color: var(--cyan); margin-top: 0.5rem; }
+
+/* Animación de rebote (bounce) manipulando transformaciones Y */
+@keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); } 40% { transform: translateY(-10px) translateX(-50%); } 60% { transform: translateY(-5px) translateX(-50%); } }
+
+/* Clases comunes para el encabezado de cada sección, asegurando consistencia de espaciado y alineación */
+.section-head{ max-width: 700px; margin: 0 auto 3rem; text-align:center; }
+.section-head h2{ font-size: clamp(1.8rem, 4vw, 2.8rem); margin-bottom: 1rem; }
+.section-head p{ color: var(--muted); font-size: 1.05rem; }
+
+/* Aseguramos que el main esté por encima de las estrellas de fondo gracias a z-index */
+main{ position: relative; z-index: 1; }
+/* Padding fluido en los laterales con clamp() para mantener buenos márgenes en todas las resoluciones */
+section{ padding: 6rem clamp(1.2rem, 5vw, 4rem); }
+
+/* Grid responsivo para la sección 'Nosotros', adaptándose automáticamente sin media queries explícitas usando auto-fit y minmax */
+.about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; max-width: 1100px; margin: 0 auto; }
+.about-card { background: rgba(30, 41, 59, 0.5); border: 1px solid var(--panel-edge); padding: 2rem; border-radius: 20px; text-align: center; transition: transform 0.3s; }
+.about-card:hover { transform: translateY(-5px); border-color: var(--cyan); }
+.about-card .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+.about-card h3 { color: var(--paper); font-size: 1.3rem; margin-bottom: 0.5rem; }
+.about-card p { color: var(--muted); font-size: 0.95rem; }
+
+/* Contenedores para aislar la escena 3D y mantener proporciones correctas en pantalla */
+.orbit-section{ text-align:center; }
+.orbit-wrap{ width: 100%; max-width: 900px; margin: 0 auto; position: relative; }
+.orbit-hint{ color: var(--cyan); font-size: 0.9rem; margin-top: 1.5rem; }
+/* Indicador visual para elementos clickeables dentro del canvas 3D */
+.planet-3d { cursor: pointer; }
+
+/* Controles de cámara fijos sobre el modelo 3D para facilitar la interacción táctil en dispositivos móviles */
+.zoom-controls {
+  position: absolute; right: 20px; bottom: 30px; z-index: 10;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.zoom-btn {
+  width: 45px; height: 45px; border-radius: 50%; background: var(--panel);
+  border: 1px solid var(--cyan); color: var(--cyan); font-size: 1.4rem; font-weight: bold;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: all 0.2s;
+}
+.zoom-btn:hover { background: var(--cyan); color: var(--void); transform: scale(1.05); }
+
+/* Diseño del boleto utilizando CSS Grid para dividirlo entre el talón y la información principal */
+.boarding-section{ padding-top: 1rem; }
+.boarding-pass{
+  max-width: 950px; margin: 0 auto; display:grid; grid-template-columns: 140px 1fr; background: var(--panel);
+  border: 1px solid var(--panel-edge); border-radius: 24px; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+}
+/* Talón del boleto, usa texto rotado para imitar la estética de tickets reales */
+.pass-stub{ position: relative; display:flex; align-items:center; justify-content:center; background: var(--planet-color, var(--cyan)); color: var(--void); }
+.pass-stub span{ writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: 0.2em; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; }
+/* Truco CSS con fondos radiales para dibujar las perforaciones clásicas de un boleto arrancado */
+.pass-perforation{ position:absolute; right: -14px; top:0; bottom:0; width: 28px; background-image: radial-gradient(circle, var(--void) 7px, transparent 8px); background-size: 28px 28px; background-position: center; }
+.pass-perforation::before, .pass-perforation::after{ content:""; position:absolute; left: 7px; width: 28px; height: 28px; border-radius: 50%; background: var(--void); }
+.pass-perforation::before{ top: -14px; }
+.pass-perforation::after{ bottom: -14px; }
+.pass-main{ padding: 2.8rem clamp(1.6rem, 4vw, 3.2rem); }
+.pass-top{ display:flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; border-bottom: 2px dashed var(--panel-edge); padding-bottom: 1.4rem; margin-bottom: 1.8rem; }
+.pass-top h3{ font-size: 2.2rem; color: var(--planet-color, var(--cyan)); text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+.pass-tagline{ color: var(--muted); font-size: 1rem; max-width: 40ch; }
+.pass-ref{ font-size: 0.8rem; color: var(--cyan); text-align:right; font-weight: 600;}
+
+/* Sub-grilla dentro del boleto para alinear las estadísticas (gravedad, temperatura, etc.) ordenadamente */
+.pass-stats{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2.5rem; }
+.stat{ background: var(--void-soft); border: 1px solid var(--panel-edge); border-radius: 14px; padding: 1rem 1.2rem; transition: transform 0.2s; }
+.stat:hover { transform: translateY(-3px); border-color: var(--cyan); }
+.stat-label{ display:block; font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; font-weight: 600;}
+.stat-value{ font-size: 1.05rem; color: var(--paper); font-weight: bold; }
+
+.pass-lists{ display:grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin-bottom: 2.5rem; }
+.pass-lists h4{ font-size: 0.95rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--planet-color); margin: 0 0 0.6rem; font-weight: 700;}
+.pass-lists p{ margin:0; color: var(--paper); font-size: 0.95rem; opacity: 0.9; }
+.pass-lists .alert p{ color: var(--coral); }
+.pass-lists .curiosity p { color: var(--gold); font-style: italic; }
+
+.btn-360{
+  width: 100%; background: rgba(56, 189, 248, 0.1); color: var(--cyan); border: 2px solid var(--cyan);
+  padding: 1.2rem; border-radius: 14px; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.1em;
+  font-weight: 700; cursor: pointer; transition: all 0.3s ease; font-family: var(--body);
+}
+.btn-360:hover{ background: var(--cyan); color: var(--void); box-shadow: 0 0 25px rgba(56, 189, 248, 0.5); transform: scale(1.02); }
+
+/* Estilos para el visor de imágenes panorámicas 360, manteniéndolo por encima de todo el contenido (z-index alto) y oculto por defecto */
+.modal-360 { position: fixed; inset: 0; z-index: 9999; background: #000; display: none; }
+.modal-360.is-open { display: block; }
+.close-360 {
+  position: absolute; top: 30px; right: 30px; z-index: 10000; background: var(--coral); color: var(--paper);
+  border: none; padding: 1rem 2rem; font-weight: bold; border-radius: 999px; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(225, 87, 59, 0.5); transition: transform 0.2s; font-family: var(--body);
+}
+.close-360:hover { transform: scale(1.05); }
+
+/* Grid responsivo para mostrar las tarjetas que sirven como catálogo de destinos alternativos */
+.catalog{ background: linear-gradient(180deg, transparent, var(--void-soft) 20%, var(--void-soft) 80%, transparent); }
+.postcards{ display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; max-width: 1100px; margin: 0 auto; }
+.postcard{ text-align:left; cursor:pointer; background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 18px; padding: 1.5rem; transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease; }
+.postcard:hover{ transform: translateY(-6px); border-color: var(--planet-color); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+/* Círculo indicador decorativo con el color específico asignado a cada planeta en la tarjeta */
+.postcard-dot{ width: 35px; height: 35px; border-radius: 50%; background: var(--planet-color); margin-bottom: 1.2rem; box-shadow: 0 0 10px var(--planet-color); }
+.postcard h3{ font-size: 1.3rem; margin-bottom: 0.4rem; color: var(--paper); }
+.postcard p{ margin:0; font-size: 0.9rem; color: var(--muted); }
+
+/* Sistema de marquesina (carrusel infinito) para testimonios. 
+   Se utiliza overflow: hidden en el contenedor padre y transformaciones X continuas para simular un desplazamiento que nunca termina. */
+.testimonials { 
+  background: linear-gradient(180deg, transparent, var(--void-soft) 50%, transparent); 
+  overflow: hidden; 
+}
+.testimonials-wrapper {
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+  padding: 1rem 0;
+}
+.test-marquee {
+  display: flex;
+  gap: 2rem;
+  width: max-content;
+  animation: scroll-marquee 40s linear infinite;
+}
+/* Pausa interactiva para permitir al usuario leer los testimonios más fácilmente al pasar el cursor */
+.test-marquee:hover {
+  animation-play-state: paused;
+}
+.marquee-group {
+  display: flex;
+  gap: 2rem;
+}
+.test-card { 
+  background: var(--panel); padding: 2rem; border-radius: 18px; border-left: 4px solid var(--cyan); 
+  width: 350px;
+  flex-shrink: 0;
+  transition: transform 0.3s;
+}
+.test-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+.test-card p { font-style: italic; color: var(--muted); margin-bottom: 1.5rem; }
+.test-author { display: flex; align-items: center; gap: 1rem; }
+.test-avatar { width: 50px; height: 50px; border-radius: 50%; background: var(--panel-edge); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--cyan); }
+.test-author h4 { margin: 0; color: var(--paper); font-size: 1rem; }
+.test-author span { color: var(--gold); font-size: 0.8rem; }
+
+/* Define la transición clave para desplazar la marquesina horizontalmente el 50% de su ancho total */
+@keyframes scroll-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 1rem)); } 
+}
+
+/* Estilización nativa de los elementos <details> y <summary> para un acordeón de Preguntas Frecuentes (FAQ) sin requerir JavaScript extra */
+.faq-section { max-width: 800px; margin: 0 auto; }
+details { background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 12px; margin-bottom: 1rem; padding: 1rem 1.5rem; transition: background 0.2s; cursor: pointer; }
+details:hover { background: rgba(30, 41, 59, 0.8); }
+summary { font-weight: 600; color: var(--paper); list-style: none; display: flex; justify-content: space-between; align-items: center; outline: none; }
+/* Oculta la flecha por defecto en WebKit para insertar iconos personalizados mediante ::after */
+summary::-webkit-details-marker { display: none; }
+summary::after { content: '+'; color: var(--cyan); font-size: 1.5rem; }
+/* Cambia el ícono a un menos cuando el panel de detalles está abierto */
+details[open] summary::after { content: '-'; }
+details p { margin-top: 1rem; color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
+
+/* Reglas finales para alinear el bloque de cierre y el pie de página */
+.closing{ text-align:center; max-width: 700px; margin: 0 auto; }
+.closing h2{ font-size: clamp(1.8rem, 4vw, 2.5rem); margin-bottom: 1.2rem; }
+.closing p{ color: var(--muted); font-size: 1.05rem;}
+
+.site-footer{ padding: 3rem clamp(1.2rem, 5vw, 4rem); border-top: 1px solid var(--panel-edge); text-align:center; color: var(--muted); font-size: 0.9rem; }
+
+/* Media query que apila el contenido del boleto interplanetario en pantallas estrechas para que el texto siga siendo legible */
+@media (max-width: 800px){
+  .boarding-pass{ grid-template-columns: 1fr; }
+  .pass-stub{ padding: 1rem 0; }
+  .pass-stub span{ writing-mode: horizontal-tb; transform:none; }
+  .pass-perforation{ display:none; }
+  .pass-stats { grid-template-columns: repeat(2, 1fr); }
+  .pass-lists{ grid-template-columns: 1fr; gap: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Modal contenedor para el visor 360. Permite al usuario ver las imágenes panorámicas inmersivas asociadas a cada planeta. -->
+<div id="modal360" class="modal-360">
+  <button class="close-360" onclick="cerrar360()">Volver al mapa ✖</button>
+  <a-scene embedded style="height: 100vh; width: 100vw;" vr-mode-ui="enabled: false">
+    <a-sky id="sky360" src="" rotation="0 -130 0"></a-sky>
+    <a-camera position="0 0 0" look-controls="reverseMouseDrag: true"></a-camera>
+  </a-scene>
+</div>
+
+<!-- Elementos puramente estéticos añadidos por CSS (Estrellas de fondo generadas vía gradientes CSS) -->
+<div class="stars" aria-hidden="true"></div>
+<!-- Contenedores posicionados en diferentes partes para ejecutar la animación de estrellas fugaces -->
+<div class="shooting-star ss1"></div>
+<div class="shooting-star ss2"></div>
+<div class="shooting-star ss3"></div>
+
+<!-- Etiqueta semántica de cabecera que incluye la navegación y el titular principal -->
+<header class="hero">
+  <!-- Nav sirve como guía de menús internos para los visitantes -->
+  <nav class="topnav">
+    <span class="brand">Plancarte <em>Space Experience</em></span>
+    <ul>
+      <li><a href="#mapa">Destinos</a></li>
+      <li><a href="#nosotros">Nosotros</a></li>
+      <li><a href="#faq">Dudas</a></li>
+      <li><a href="#reservar" class="nav-cta">Reservar boletos</a></li>
+    </ul>
+  </nav>
+
+  <!-- Contenedor principal de venta/llamada a la acción. Centrado para atraer rápidamente la atención. -->
+  <div class="hero-content">
+    <span class="eyebrow">Agencia de viajes · Vuelos interplanetarios desde 1 UA</span>
+    <h1>Guía turística del</h1>
+    <h1>sistema solar</h1>
+    <p class="hero-sub">Olvida las aburridas clases de astronomía. Somos tu agencia de viajes personal para recorrer los planetas. Te decimos qué empacar, qué ver y cómo sobrevivir al clima espacial.</p>
+    <a href="#mapa" class="cta">Empezar la aventura</a>
+  </div>
+  
+  <div class="scroll-indicator">
+    <span>Desliza para explorar</span>
+    <div class="arrow">↓</div>
+  </div>
+</header>
+
+<main>
+  
+  <!-- Estructura básica de una sección informativa. Usa un grid para colocar las tarjetas de venta de forma equilibrada -->
+  <section id="nosotros">
+    <div class="section-head">
+      <span class="eyebrow">Nuestra Filosofía</span>
+      <h2>¿Por qué viajar con Plancarte?</h2>
+      <p>Nos tomamos muy en serio tus vacaciones interplanetarias. Cuidamos cada detalle para que tu única preocupación sea disfrutar de las vistas.</p>
+    </div>
+    <div class="about-grid">
+      <div class="about-card">
+        <div class="icon">🚀</div>
+        <h3>Naves de última generación</h3>
+        <p>Olvídate de los cohetes ruidosos del siglo XXI. Nuestras cabinas cuentan con gravedad artificial y ventanas panorámicas antimeteoritos.</p>
+      </div>
+      <div class="about-card">
+        <div class="icon">👨‍🚀</div>
+        <h3>Guías certificados</h3>
+        <p>Nuestros pilotos conocen cada cráter y anillo de memoria. Te llevaremos a los rincones más impresionantes y seguros del sistema.</p>
+      </div>
+      <div class="about-card">
+        <div class="icon">🛡️</div>
+        <h3>Seguridad garantizada</h3>
+        <p>Trajes presurizados a medida, seguros contra abducciones alienígenas y soporte vital 24/7 en todos nuestros destinos extremos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contenedor del elemento 3D de A-Frame, que sirve como componente principal e interactivo de la aplicación web. -->
+  <section id="mapa" class="orbit-section">
+    <div class="section-head">
+      <span class="eyebrow">Sala de embarque</span>
+      <h2>Elige tu próximo destino</h2>
+      <p>Selecciona un planeta en nuestro mapa de navegación en vivo para generar tu boleto de abordaje y ver las recomendaciones de viaje.</p>
+    </div>
+
+    <!-- Se define una altura explícita para evitar saltos en la pantalla al cargar el componente 3D -->
+    <div class="orbit-wrap" style="height: 520px;">
+      <!-- a-scene envuelve y configura el contexto 3D. El raycaster intercepta clics del mouse sobre los planetas. -->
+      <a-scene embedded style="height: 520px; width: 100%; background: transparent;" vr-mode-ui="enabled: false" cursor="rayOrigin: mouse" raycaster="objects: .planet-3d">
+        
+        <!-- Configuración de iluminación: luz ambiental base y luz de un punto (sol central) para dar volumen a las esferas -->
+        <a-entity light="type: ambient; color: #556; intensity: 1.2"></a-entity>
+        <a-entity light="type: point; color: #FFF; intensity: 2.5; distance: 150" position="0 0 0"></a-entity>
+        
+        <!-- Esfera central que representa el Sol -->
+        <a-sphere position="0 0 0" radius="2.2" color="#FACC15" material="emissive: #FACC15; emissiveIntensity: 1; roughness: 0.2"></a-sphere>
+        
+        <!-- Entidad vacía donde Javascript inyectará las órbitas y planetas de forma programática -->
+        <a-entity id="orbits3D"></a-entity>
+        
+        <!-- Cámara 3D predeterminada orientada en un ángulo que permite visualizar el plano general del sistema solar -->
+        <a-entity id="camara3D" camera position="0 18 32" rotation="-35 0 0" look-controls="enabled: true; reverseMouseDrag: false" wasd-controls="enabled: false"></a-entity>
+        
+      </a-scene>
+
+      <!-- Botones construidos en HTML tradicional, superpuestos al canvas 3D para facilitar el uso en móviles, vinculados a funciones de JS -->
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="cambiarZoom(-3)" title="Acercar">+</button>
+        <button class="zoom-btn" onclick="cambiarZoom(3)" title="Alejar">-</button>
+        <button class="zoom-btn reset-camera-btn" onclick="restablecerCamara()" title="Restablecer cámara">↺</button>
+      </div>
+    </div>
+    <p class="orbit-hint">💡 Interactúa: Arrastra el mouse para girar 360°, usa la rueda o los botones <b>+</b>/<b>-</b> para hacer zoom y haz clic en los planetas.</p>
+  </section>
+
+  <!-- Esta sección arranca oculta y se visualiza a través de JS una vez que el usuario selecciona un planeta (inyectando HTML dinámicamente) -->
+  <section id="ficha" class="boarding-section" hidden>
+    <div class="boarding-pass" id="boardingPass">
+      <!-- El contenido se inyecta desde JavaScript al seleccionar un planeta -->
+    </div>
+  </section>
+
+  <!-- Catálogo tradicional de respaldo a la visualización 3D -->
+  <section id="catalogo" class="catalog">
+    <div class="section-head">
+      <span class="eyebrow">Catálogo completo</span>
+      <h2>Todos los destinos</h2>
+      <p>Si eres de los que prefiere elegir su destino por nombre y no por órbita, aquí tienes nuestra lista.</p>
+    </div>
+    <div class="postcards" id="postcards">
+      <!-- tarjetas generadas por script.js -->
+    </div>
+  </section>
+
+  <!-- Esta sección emplea la técnica de Marquesina de CSS. Dos bloques idénticos se desplazan infinitamente dando la ilusión de flujo ininterrumpido. -->
+  <section id="testimonios" class="testimonials">
+    <div class="section-head">
+      <span class="eyebrow">El muro de la fama</span>
+      <h2>Lo que dicen nuestros viajeros</h2>
+      <p>Miles de clientes felices (y con todas sus extremidades intactas) nos respaldan.</p>
+    </div>
+    
+    <div class="testimonials-wrapper">
+      <div class="test-marquee">
+        <!-- Grupo original de tarjetas de testimonios. -->
+        <div class="marquee-group">
+          <div class="test-card">
+            <p>"El tour por los anillos de Saturno fue alucinante. ¡Las fotos no le hacen justicia! Solo asegúrate de llevar un buen suéter térmico, hace un poco de brisa."</p>
+            <div class="test-author">
+              <div class="test-avatar">M</div>
+              <div><h4>María S.</h4><span>⭐⭐⭐⭐⭐ Destino: Saturno</span></div>
+            </div>
+          </div>
+          <div class="test-card">
+            <p>"El servicio fue excelente, aunque el clima en Venus arruinó un poco mi bronceado (¡460 grados!). Pero la vista de los volcanes valió totalmente la pena."</p>
+            <div class="test-author">
+              <div class="test-avatar">C</div>
+              <div><h4>Carlos D.</h4><span>⭐⭐⭐⭐ Destino: Venus</span></div>
+            </div>
+          </div>
+          <div class="test-card">
+            <p>"El cañón Valles Marineris es mil veces mejor que el Gran Cañón. A los niños les encantó la baja gravedad en Marte, no paraban de saltar por todos lados."</p>
+            <div class="test-author">
+              <div class="test-avatar">L</div>
+              <div><h4>Familia López</h4><span>⭐⭐⭐⭐⭐ Destino: Marte</span></div>
+            </div>
+          </div>
+          <div class="test-card">
+            <p>"Ver la Gran Mancha Roja de Júpiter de cerca te hace sentir minúsculo. El crucero tenía ventanas increíbles y la comida a bordo era espectacular. ¡Lo recomiendo!"</p>
+            <div class="test-author">
+              <div class="test-avatar">A</div>
+              <div><h4>Andrea V.</h4><span>⭐⭐⭐⭐⭐ Destino: Júpiter</span></div>
+            </div>
+          </div>
+          <div class="test-card">
+            <p>"Las auroras desalineadas en Urano son un espectáculo de luces natural hermoso. Además, el chocolate caliente de la nave era top para pasar el frío."</p>
+            <div class="test-author">
+              <div class="test-avatar">D</div>
+              <div><h4>David R.</h4><span>⭐⭐⭐⭐ Destino: Urano</span></div>
+            </div>
+          </div>
+          <div class="test-card">
+            <p>"Tomar fotos de la Tierra desde el espacio siempre fue mi sueño de niño. Gracias a Plancarte lo cumplí, la atención del guía fue simplemente de diez."</p>
+            <div class="test-author">
+              <div class="test-avatar">E</div>
+              <div><h4>Elena P.</h4><span>⭐⭐⭐⭐⭐ Destino: Tierra</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Duplicado del grupo original. Esto es necesario en CSS para que cuando la primera parte desaparezca por la izquierda, la segunda parte ocupe su lugar perfectamente y el ciclo se reinicie. -->
+        <div class="marquee-group" aria-hidden="true">
+          <div class="test-card">
+            <p>"El tour por los anillos de Saturno fue alucinante. ¡Las fotos no le hacen justicia! Solo asegúrate de llevar un buen suéter térmico, hace un poco de brisa."</p>
+            <div class="test-author">
+              <div class="test-avatar">M</div>
+              <div><h4>María S.</h4><span>⭐⭐⭐⭐⭐ Destino: Saturno</span></div>
+            </div>
+          </div>
+          <div class="test-card">
+            <p>"El servicio fue excelente, aunque el clima en Venus arruinó un poco mi bronceado (¡460 grados!). Pero la vista de los volcanes valió totalmente la pena."</p>
+            <div class="test-author">
+              <div class="test-avatar">C</div>
+              <div><h4>Carlos D.</h4><span>⭐⭐⭐⭐ Destino: Venus</span></div>
+            </div>
+          </div>
+          <div class="test-card">
+            <p>"El cañón Valles Marineris es mil veces mejor que el Gran Cañón. A los niños les encantó la baja gravedad en Marte, no paraban de saltar por todos lados."</p>
+            <div class="test-author">
+              <div class="test-avatar">L</div>
+              <div><h4>Familia López</h4><span>⭐⭐⭐⭐⭐ Destino: Marte</span></div>
+            </div>
+          </div>
+          <div class="test-card">
+            <p>"Ver la Gran Mancha Roja de Júpiter de cerca te hace sentir minúsculo. El crucero tenía ventanas increíbles y la comida a bordo era espectacular. ¡Lo recomiendo!"</p>
+            <div class="test-author">
+              <div class="test-avatar">A</div>
+              <div><h4>Andrea V.</h4><span>⭐⭐⭐⭐⭐ Destino: Júpiter</span></div>
+            </div>
+          </div>
+          <div class="test-card">
+            <p>"Las auroras desalineadas en Urano son un espectáculo de luces natural hermoso. Además, el chocolate caliente de la nave era top para pasar el frío."</p>
+            <div class="test-author">
+              <div class="test-avatar">D</div>
+              <div><h4>David R.</h4><span>⭐⭐⭐⭐ Destino: Urano</span></div>
+            </div>
+          </div>
+          <div class="test-card">
+            <p>"Tomar fotos de la Tierra desde el espacio siempre fue mi sueño de niño. Gracias a Plancarte lo cumplí, la atención del guía fue simplemente de diez."</p>
+            <div class="test-author">
+              <div class="test-avatar">E</div>
+              <div><h4>Elena P.</h4><span>⭐⭐⭐⭐⭐ Destino: Tierra</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Utilizando las etiquetas details y summary HTML5 obtenemos comportamiento colapsable interactivo y accesible por defecto, prescindiendo de programar la lógica en JS -->
+  <section id="faq">
+    <div class="section-head">
+      <span class="eyebrow">Despejando dudas</span>
+      <h2>Preguntas Frecuentes</h2>
+    </div>
+    <div class="faq-section">
+      <details>
+        <summary>¿Necesito un entrenamiento previo de astronauta?</summary>
+        <p>¡Para nada! En Plancarte Space Experience nos encargamos de todo. Nuestras naves comerciales compensan la fuerza G durante el despegue. Solo necesitas abrocharte el cinturón y relajarte.</p>
+      </details>
+      <details>
+        <summary>¿Qué tipo de comida sirven durante el trayecto?</summary>
+        <p>Olvídate de la comida en tubos de pasta. Nuestros cruceros espaciales cuentan con chefs que preparan platillos frescos cultivados en nuestros huertos hidropónicos de a bordo. ¡Las pizzas con gravedad cero son un éxito!</p>
+      </details>
+      <details>
+        <summary>¿Es seguro viajar a planetas gaseosos como Júpiter?</summary>
+        <p>Totalmente. En los planetas gaseosos no realizamos aterrizajes (ya que no hay superficie sólida). Nuestro tour consiste en un vuelo orbital panorámico a una distancia segura de la radiación, para que disfrutes de las vistas desde el salón de cristal de la nave.</p>
+      </details>
+      <details>
+        <summary>¿Qué pasa si me enfermo en el espacio?</summary>
+        <p>Todas nuestras naves están equipadas con bahías médicas automatizadas de última generación y personal médico especializado en fisiología espacial. Estás en las mejores manos.</p>
+      </details>
+    </div>
+  </section>
+
+  <section id="reservar" class="closing">
+    <span class="eyebrow">Antes de despegar</span>
+    <h2>No existen vuelos directos. Sólo trayectorias.</h2>
+    <p>Cada boleto de Plancarte Space Experience es también una lección de física orbital: no vas en línea recta a ningún lado, vas cayendo alrededor del Sol de forma muy elegante gracias a la gravedad.</p>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>Plancarte Space Experience — Tu agencia de confianza para salir de la órbita.</p>
+  <p class="fine-print">Proyecto educativo interactivo sobre el sistema solar. Todos los datos científicos son reales y actualizados. Las opciones turísticas, lamentablemente, tendrán que esperar unos cuantos siglos para ser realidad.</p>
+</footer>
+
+<script>
+/* 
+  Se define un arreglo (Array) constante global de objetos. 
+  Centralizar estos datos facilita actualizar o agregar planetas en el futuro. 
+  Contiene la lógica base (colores, distancias, curiosidades y rutas de imágenes 360) que alimentará la escena 3D y el boleto.
+*/
+const PLANETS = [
+  {
+    id: "mercurio",
+    nombre: "Mercurio",
+    tagline: "Un destino extremo para los viajeros que buscan verdaderos retos.",
+    color: "#B5B0A6",
+    orbitRadius: 60,
+    orbitSeconds: 8,
+    planetRadius: 6,
+    gravedad: "3.7 m/s²",
+    temperatura: "De -180°C a 430°C",
+    diaSolar: "176 días terrestres",
+    lunas: "0",
+    curiosidad: "Aunque es el más cercano al Sol, ¡Venus le gana en calor!",
+    llevar: "Un buen traje con termorregulación extrema. Prepárate para el frío polar y el calor de un horno en el mismo día.",
+    ver: "Los espectaculares amaneceres donde el Sol parece detenerse y retroceder en el horizonte.",
+    clima: "Viento solar directo constante. ¡No olvides el bloqueador de radiación!",
+    img360: "img/Mercurio.jpg"
+  },
+  {
+    id: "venus",
+    nombre: "Venus",
+    tagline: "El planeta que nos recuerda por qué amamos tanto a la Tierra.",
+    color: "#E8C170",
+    orbitRadius: 92,
+    orbitSeconds: 12,
+    planetRadius: 9,
+    gravedad: "8.87 m/s²",
+    temperatura: "464°C (¡Una locura!)",
+    diaSolar: "243 días terrestres",
+    lunas: "0",
+    curiosidad: "Aquí el sol sale por el oeste y se pone por el este. ¡Todo al revés!",
+    llevar: "Definitivamente un traje de titanio anticorrosivo. Y deja la ropa ligera en casa.",
+    ver: "Una caminata panorámica (en vehículo blindado) por los colosales volcanes de Maat Mons.",
+    clima: "Llueve ácido sulfúrico y la presión te aplastaría como a una lata. ¡Solo para valientes!",
+    img360: "img/Venus.jpg" 
+  },
+  {
+    id: "tierra",
+    nombre: "Tierra",
+    tagline: "No hay lugar como el hogar. Perfecto para recargar energías.",
+    color: "#38bdf8",
+    orbitRadius: 124,
+    orbitSeconds: 16,
+    planetRadius: 9,
+    gravedad: "9.8 m/s²",
+    temperatura: "15°C (Promedio ideal)",
+    diaSolar: "24 horitas",
+    lunas: "1 (Nuestra querida Luna)",
+    curiosidad: "¡Sorpresa! Es el único lugar que conocemos donde puedes comer pizza.",
+    llevar: "Cámara, traje de baño y ropa cómoda. Aquí puedes respirar sin casco, ¡aprovéchalo!",
+    ver: "Océanos inmensos, selvas y atardeceres que no necesitan filtros.",
+    clima: "Muy amigable, protegido por un escudo magnético VIP.",
+    img360: "img/Tierra.jpg" 
+  },
+  {
+    id: "marte",
+    nombre: "Marte",
+    tagline: "El destino de moda. Descubre por qué todos quieren mudarse aquí.",
+    color: "#e14922",
+    orbitRadius: 156,
+    orbitSeconds: 20,
+    planetRadius: 7,
+    gravedad: "3.71 m/s²",
+    temperatura: "Fresco, a unos -63°C",
+    diaSolar: "24 h 37 min",
+    lunas: "2 (Fobos y Deimos)",
+    curiosidad: "Los atardeceres marcianos se ven de color azul. ¡Prepara tu cámara!",
+    llevar: "Botas de senderismo marciano, crema hidratante (el aire es sequísimo) y ropa térmica.",
+    ver: "Olympus Mons, un volcán tan grande que hace que el Monte Everest parezca una colina.",
+    clima: "Mayormente despejado, pero cuidado con las tormentas de polvo globales que arruinan la vista.",
+    img360: "img/Marte.jpg" 
+  },
+  {
+    id: "jupiter",
+    nombre: "Júpiter",
+    tagline: "El rey del sistema solar. Su tamaño te dejará sin aliento.",
+    color: "#D9A066",
+    orbitRadius: 194,
+    orbitSeconds: 26,
+    planetRadius: 18,
+    gravedad: "24.79 m/s²",
+    temperatura: "-110°C (Helado)",
+    diaSolar: "9 h 56 min (Pasa volando)",
+    lunas: "¡Más de 90!",
+    curiosidad: "Podrías meter 1,300 Tierras dentro de Júpiter y aún sobraría espacio.",
+    llevar: "Ropa cómoda de cabina. Este tour es 100% orbital, ya que no tiene suelo donde pisar.",
+    ver: "La legendaria Gran Mancha Roja, un huracán activo que lleva siglos girando.",
+    clima: "Vientos brutales y mucha radiación, pero desde la nave estarás súper seguro.",
+    img360: "img/Jupiter.jpg" 
+  },
+  {
+    id: "saturno",
+    nombre: "Saturno",
+    tagline: "La joya de la corona. El paraíso indiscutible de la fotografía espacial.",
+    color: "#E4C590",
+    orbitRadius: 232,
+    orbitSeconds: 32,
+    planetRadius: 16,
+    gravedad: "10.44 m/s²",
+    temperatura: "-140°C",
+    diaSolar: "10 h 33 min",
+    lunas: "146 (Imposible visitarlas todas)",
+    curiosidad: "Es tan ligero que flotaría si existiera una piscina lo bastante grande.",
+    llevar: "La mejor cámara que tengas y varias memorias extra. ¡Ne dejarás de tomar fotos!",
+    ver: "Sus icónicos anillos de hielo brillando al sol, un espectáculo que jamás olvidarás.",
+    clima: "Tormentas eléctricas y vientos huracanados en el fondo, paz absoluta en los anillos.",
+    img360: "img/Saturno.jpg" 
+  },
+  {
+    id: "urano",
+    nombre: "Urano",
+    tagline: "El gigante incomprendido que hace las cosas a su manera.",
+    color: "#7FD8D0",
+    orbitRadius: 268,
+    orbitSeconds: 38,
+    planetRadius: 12,
+    gravedad: "8.69 m/s²",
+    temperatura: "Unos gélidos -195°C",
+    diaSolar: "17 h 14 min",
+    lunas: "28 descubiertas",
+    curiosidad: "Gira completamente recostado de lado. Es el 'rebelde' del sistema solar.",
+    llevar: "Tu abrigo más grueso. Y luego, ponte otro encima.",
+    ver: "Las misteriosas auroras que ocurren en lugares rarísimos debido a su eje chueco.",
+    clima: "Es un congelador gigante de hielo y gas. Ideal para ver desde la ventana con un chocolate caliente.",
+    img360: "img/Urano.jpg" 
+  },
+  {
+    id: "neptuno",
+    nombre: "Neptuno",
+    tagline: "El azul profundo. Nuestro último destino antes del espacio interestelar.",
+    color: "#3b5bdb",
+    orbitRadius: 304,
+    orbitSeconds: 44,
+    planetRadius: 12,
+    gravedad: "11.15 m/s²",
+    temperatura: "Cerca de -200°C",
+    diaSolar: "16 h 6 min",
+    lunas: "16 descubiertas",
+    curiosidad: "La ciencia dice que en su interior profundo, literalmente, llueven diamantes.",
+    llevar: "Ajusta bien tu cinturón. Este es el planeta más ventoso de todos los que visitaremos.",
+    ver: "El azul zafiro intenso de sus nubes de metano contrastando con el negro del espacio.",
+    clima: "Vientos supersónicos de más de 2,000 km/h. Una montaña rusa natural (vista desde lejos, claro).",
+    img360: "img/Neptuno.jpg" 
+  }
+];
+
+/* 
+  Se obtiene la referencia del contenedor en HTML donde se dibujarán las órbitas y planetas en 3D. 
+*/
+const orbitsGroup3D = document.getElementById("orbits3D");
+
+/* 
+  Iteración principal que construye el sistema solar interactivo mediante programación de nodos DOM de A-Frame:
+  Calcula posiciones, crea el grupo contenedor para rotación orbital, el anillo visible (a-torus) y la esfera del planeta con su evento click.
+*/
+PLANETS.forEach(p => {
+  const radio3D = p.orbitRadius / 11; 
+  const tamanoPlaneta = p.planetRadius / 12;
+
+  const group = document.createElement("a-entity");
+  const randomAngle = Math.floor(Math.random() * 360);
+  group.setAttribute("rotation", `0 ${randomAngle} 0`);
+  group.setAttribute("animation", `property: rotation; to: 0 ${randomAngle + 360} 0; loop: true; dur: ${p.orbitSeconds * 1000}; easing: linear`);
+
+  const ring = document.createElement("a-torus");
+  ring.setAttribute("radius", radio3D);
+  ring.setAttribute("radius-tubular", "0.012");
+  ring.setAttribute("rotation", "90 0 0");
+  ring.setAttribute("color", "#334155");
+  ring.setAttribute("material", "opacity: 0.6; transparent: true");
+  orbitsGroup3D.appendChild(ring);
+
+  const planet = document.createElement("a-sphere");
+  planet.setAttribute("position", `${radio3D} 0 0`);
+  planet.setAttribute("radius", tamanoPlaneta);
+  planet.setAttribute("color", p.color);
+  planet.setAttribute("class", "planet-3d");
+  planet.setAttribute("material", "roughness: 0.4");
+  
+  planet.addEventListener("click", () => selectPlanet(p.id, true));
+
+  group.appendChild(planet);
+  orbitsGroup3D.appendChild(group);
+});
+
+/* 
+  Se establecen constantes referenciales de posición predeterminada para que el botón de "restablecer cámara" sepa exactamente a qué coordenadas volver.
+*/
+const POSICION_CAMARA_INICIAL = { x: 0, y: 18, z: 32 };
+const ROTACION_CAMARA_INICIAL = { x: -35, y: 0, z: 0 };
+
+function restablecerCamara() {
+  const camara = document.getElementById("camara3D");
+  if (!camara) return;
+
+  camara.setAttribute("position", { ...POSICION_CAMARA_INICIAL });
+  camara.setAttribute("rotation", { ...ROTACION_CAMARA_INICIAL });
+}
+
+/* 
+  Función centralizada para modificar el nivel de zoom acercando o alejando la cámara (eje Z e Y). 
+  Los métodos Math.max y Math.min restringen (clamp) el movimiento para no traspasar planetas ni alejarse demasiado.
+*/
+function cambiarZoom(cantidad) {
+  const camara = document.getElementById("camara3D");
+  if (!camara) return;
+  
+  let pos = camara.getAttribute("position");
+  pos.z = Math.max(10, Math.min(pos.z + cantidad, 65));
+  pos.y = Math.max(5, Math.min(pos.y + (cantidad * 0.5), 38));
+  camara.setAttribute("position", pos);
+}
+
+/* 
+  Event listener adosado al canvas 3D para interceptar la rueda del ratón de escritorio (scroll). 
+  Se previene su acción predeterminada para que la página no suba o baje al hacer zoom en el mapa interactivo.
+*/
+const escena3D = document.querySelector("#mapa a-scene");
+if (escena3D) {
+  escena3D.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    cambiarZoom(e.deltaY > 0 ? 3 : -3);
+  }, { passive: false });
+}
+
+/* 
+  Bucle que inyecta programáticamente las tarjetas estáticas que funcionan como menú alternativo del catálogo de planetas, 
+  sirviendo de navegación fallback amigable para el diseño cuando el usuario no desea interactuar con el modelo 3D.
+*/
+const postcardsWrap = document.getElementById("postcards");
+const boardingSection = document.getElementById("ficha");
+const boardingPass = document.getElementById("boardingPass");
+
+PLANETS.forEach(p => {
+  const card = document.createElement("button");
+  card.className = "postcard";
+  card.style.setProperty("--planet-color", p.color);
+  card.innerHTML = `
+    <span class="postcard-dot"></span>
+    <h3>${p.nombre}</h3>
+    <p>${p.tagline}</p>
+  `;
+  card.addEventListener("click", () => selectPlanet(p.id, true));
+  postcardsWrap.appendChild(card);
+});
+
+/* 
+  Controla la apertura del visor 360. Asigna la textura (imagen panorámica) al elemento a-sky de A-Frame, 
+  muestra el modal superpuesto y bloquea el scroll del documento de fondo.
+*/
+function abrir360(url) {
+  const modal = document.getElementById("modal360");
+  const sky = document.getElementById("sky360");
+  const scene = document.querySelector(".modal-360 a-scene");
+  
+  sky.setAttribute("src", url);
+  modal.classList.add("is-open");
+  document.body.style.overflow = "hidden";
+
+  setTimeout(() => {
+    if (scene) {
+      scene.resize();
+      window.dispatchEvent(new Event('resize'));
+    }
+  }, 100);
+}
+
+function cerrar360() {
+  const modal = document.getElementById("modal360");
+  modal.classList.remove("is-open");
+  document.body.style.overflow = ""; 
+}
+
+/* 
+  Lógica de actualización de la interfaz al interactuar. Busca el planeta por ID en el arreglo estático y sobrescribe el HTML del bloque "Boleto", 
+  reemplazando los datos, colores y emojis específicos del destino. Además, revela la sección oculta.
+*/
+function selectPlanet(id, hacerScroll = true) {
+  const p = PLANETS.find(pl => pl.id === id);
+  if (!p) return;
+
+  boardingPass.style.setProperty("--planet-color", p.color);
+  boardingPass.innerHTML = `
+    <div class="pass-stub" style="--planet-color:${p.color}">
+      <span>Boleto · ${p.nombre}</span>
+      <div class="pass-perforation"></div>
+    </div>
+    <div class="pass-main">
+      <div class="pass-top">
+        <div>
+          <h3>${p.nombre}</h3>
+          <p class="pass-tagline">${p.tagline}</p>
+        </div>
+        <div class="pass-ref">
+          PLANCARTE·SPACE<br>
+          VUELO-${p.id.toUpperCase()}
+        </div>
+      </div>
+
+      <div class="pass-stats">
+        <div class="stat">
+          <span class="stat-label">Gravedad</span>
+          <span class="stat-value">${p.gravedad}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Clima</span>
+          <span class="stat-value">${p.temperatura}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Día Solar</span>
+          <span class="stat-value">${p.diaSolar}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Lunas</span>
+          <span class="stat-value">${p.lunas}</span>
+        </div>
+      </div>
+
+      <div class="pass-lists">
+        <div>
+          <h4>🎒 ¿Qué empacar?</h4>
+          <p>${p.llevar}</p>
+          
+          <h4 style="margin-top: 1.5rem;">📸 Lo mejor del tour</h4>
+          <p>${p.ver}</p>
+        </div>
+        
+        <div>
+          <div class="alert">
+            <h4>⚠️ Reporte del clima</h4>
+            <p>${p.clima}</p>
+          </div>
+          
+          <div class="curiosity" style="margin-top: 1.5rem;">
+            <h4>💡 Dato de nuestro guía</h4>
+            <p>"${p.curiosidad}"</p>
+          </div>
+        </div>
+      </div>
+      
+      <button class="btn-360" onclick="abrir360('${p.img360}')">
+        Abrir visor panorámico 🔭
+      </button>
+
+    </div>
+  `;
+
+  boardingSection.hidden = false;
+  
+  if(hacerScroll) {
+    boardingSection.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+/* 
+  Se invoca por primera vez la función de selección pasándole la Tierra por defecto, 
+  pero configuramos la sección del boleto para que se mantenga oculta hasta que el usuario decida interactuar por su cuenta.
+*/
+selectPlanet("tierra", false);
+boardingSection.hidden = true; 
+</script>
+</body>
+</html>
