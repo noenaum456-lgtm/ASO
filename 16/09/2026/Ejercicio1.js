@@ -11,7 +11,7 @@ console.log("2. Kilometros a metros");
 console.log("3. Horas a minutos");
 console.log("4. Días a horas");
 
-rl.question("Ingrese la opción que desea realizar (1, 2, 3 o 4): ", (opción) => {
+rl.question("Ingrese la opción que desea realizar (1, 2, 3 o 4)): ", (opción) => {
     rl.question("Inserte la cantidad que desea convertir: ", (converción) => {
 
         opción = parseInt(opción);
